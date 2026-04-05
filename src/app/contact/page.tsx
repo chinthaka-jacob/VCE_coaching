@@ -22,8 +22,6 @@ const faqs = [
 ];
 
 export default function ContactPage() {
-  const formspreeId = process.env.NEXT_PUBLIC_FORMSPREE_ID;
-
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -49,30 +47,22 @@ export default function ContactPage() {
     setError("");
 
     try {
-      if (!formspreeId) {
-        const subject = encodeURIComponent(
-          formState.subject || "Website enquiry"
-        );
-        const body = encodeURIComponent(
-          `Name: ${formState.name}\nEmail: ${formState.email}\nPhone: ${formState.phone || "N/A"}\nSubject: ${formState.subject || "General enquiry"}\n\nMessage:\n${formState.message}`
-        );
-
-        window.location.href = `mailto:eigen.kew@gmail.com?subject=${subject}&body=${body}`;
-
-        setSubmitted(true);
-        return;
-      }
-
-      // Using Formspree for form handling (free tier available)
-      const response = await fetch(`https://formspree.io/f/${formspreeId}`, {
+      const response = await fetch("https://formsubmit.co/ajax/eigen.kew@gmail.com", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+          _subject: `Website enquiry: ${formState.subject || "General enquiry"}`,
+          _captcha: "false",
+        }),
       });
 
-      if (response.ok) {
+      const result = await response.json();
+
+      if (response.ok && result?.success === "true") {
         setSubmitted(true);
         setFormState({
           name: "",
@@ -84,10 +74,10 @@ export default function ContactPage() {
         // Reset submission message after 5 seconds
         setTimeout(() => setSubmitted(false), 5000);
       } else {
-        setError("Failed to send message. Please try again or email directly.");
+        setError("Failed to send message. Please email us directly at eigen.kew@gmail.com.");
       }
     } catch (err) {
-      setError("Network error. Please try again or email directly.");
+      setError("Network error. Please email us directly at eigen.kew@gmail.com.");
       console.error("Form submission error:", err);
     } finally {
       setLoading(false);
