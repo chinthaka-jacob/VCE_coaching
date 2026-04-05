@@ -50,7 +50,16 @@ export default function ContactPage() {
 
     try {
       if (!formspreeId) {
-        setError("Contact form is not configured yet. Please email us directly.");
+        const subject = encodeURIComponent(
+          formState.subject || "Website enquiry"
+        );
+        const body = encodeURIComponent(
+          `Name: ${formState.name}\nEmail: ${formState.email}\nPhone: ${formState.phone || "N/A"}\nSubject: ${formState.subject || "General enquiry"}\n\nMessage:\n${formState.message}`
+        );
+
+        window.location.href = `mailto:eigen.kew@gmail.com?subject=${subject}&body=${body}`;
+
+        setSubmitted(true);
         return;
       }
 
