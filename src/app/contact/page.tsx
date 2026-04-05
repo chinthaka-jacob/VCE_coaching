@@ -22,6 +22,8 @@ const faqs = [
 ];
 
 export default function ContactPage() {
+  const formspreeId = process.env.NEXT_PUBLIC_FORMSPREE_ID;
+
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -47,8 +49,13 @@ export default function ContactPage() {
     setError("");
 
     try {
+      if (!formspreeId) {
+        setError("Contact form is not configured yet. Please email us directly.");
+        return;
+      }
+
       // Using Formspree for form handling (free tier available)
-      const response = await fetch("https://formspree.io/f/YOUR_FORM_ID", {
+      const response = await fetch(`https://formspree.io/f/${formspreeId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
