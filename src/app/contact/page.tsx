@@ -47,22 +47,37 @@ export default function ContactPage() {
     setError("");
 
     try {
+      const payload = new URLSearchParams({
+        name: formState.name,
+        email: formState.email,
+        phone: formState.phone || "N/A",
+        subject: formState.subject || "General enquiry",
+        message: formState.message,
+        _subject: `Website enquiry: ${formState.subject || "General enquiry"}`,
+        _captcha: "false",
+        _template: "table",
+      });
+
       const response = await fetch("https://formsubmit.co/ajax/eigen.kew@gmail.com", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          ...formState,
-          _subject: `Website enquiry: ${formState.subject || "General enquiry"}`,
-          _captcha: "false",
-        }),
+        body: payload.toString(),
       });
 
-      const result = await response.json();
+      let errorMessage = "";
+      try {
+        const result = await response.json();
+        if (typeof result?.message === "string") {
+          errorMessage = result.message;
+        }
+      } catch {
+        // no-op: some responses may not contain JSON
+      }
 
-      if (response.ok && result?.success === "true") {
+      if (response.ok) {
         setSubmitted(true);
         setFormState({
           name: "",
@@ -74,7 +89,10 @@ export default function ContactPage() {
         // Reset submission message after 5 seconds
         setTimeout(() => setSubmitted(false), 5000);
       } else {
-        setError("Failed to send message. Please email us directly at eigen.kew@gmail.com.");
+        setError(
+          errorMessage ||
+            "Failed to send message. Please email us directly at eigen.kew@gmail.com."
+        );
       }
     } catch (err) {
       setError("Network error. Please email us directly at eigen.kew@gmail.com.");
